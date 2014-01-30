@@ -1,56 +1,44 @@
-import asyncore, socket, re, json, uuid, sys
-from tlslite.api import *
+import socket, asyncore, re, json, uuid, sys
+#from tlslite.api import *
 
-class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
+class MycroftClient():
 
     def __init__(self, host, port):
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((host, port))
+        self.socket = socket.create_connection((host,port))
+        self.handle_connect()
         self.dependencies = {}
-        if len(sys.argv) == 1:
-            s = open(cert_path).read()
-            x509 = X509()
-            x509.parse(s)
-            cert_chain = X509CertChain([x509])
 
-            s = open(key_path).read()
-            private_key = parsePEMKey(s, private=True)
-            TLSAsyncDispatcherMixIn.__init__(self, self.socket)
-            self.tlsConnection.ignoreAbruptClose = True
-            handshaker = self.tlsConnection.handshakeClientCert(
-                certChain=certChain,
-                privateKey=privateKey,
-                async=True)
-            self.setHandshakeOp(handshaker)
-
+    def event_loop(self):
+        while True:
+            self.handle_read()
 
     def handle_connect(self):
         print('Connected to Mycroft')
-        send_manifest()
-        on_connect()
+        self.send_manifest()
+        self.connected = True
+        self.on_connect()
 
     def handle_read(self):
-        length = int(recv_until_newline())
-        message = recv(length)
-        parsed = parse_message(message)
+        length = int(self.recv_until_newline())
+        message = str(self.socket.recv(length),encoding='UTF-8')
+        parsed = self.parse_message(message)
         print('Recieved {0}'.format(parsed))
         if parsed['type'] == 'APP_MANIFEST_OK' or parsed['type'] == 'APP_MANIFEST_FAIL':
-            check_manifest(parsed)
+            self.check_manifest(parsed)
             self.verified = True
-        on_data(parsed)
+        self.on_data(parsed)
 
     def handle_close(self):
-        on_end()
-        down()
+        self.on_end()
+        self.down()
         print('Disconnected from Mycroft')
-        self.close()
+        self.socket.close()
 
     # Sends App Manifest to mycroft
     def send_manifest(self):
         f = open(self.manifest)
-        manifest = json.loads(f.read())
-        send_message('APP_MANIFEST', message)
+        message = json.loads(f.read())
+        self.send_message('APP_MANIFEST', message)
 
     # Checks if manifest is valid
     def check_manifest(self, parsed):
@@ -61,20 +49,20 @@ class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
 
     # Sends app up to mycroft
     def up(self):
-        send_message('APP_UP')
+        self.send_message('APP_UP')
 
     # Sends app down to mycroft
     def down(self):
-        send_message('APP_DOWN')
+        self.send_message('APP_DOWN')
 
     # Sends app in use to mycroft
     def in_use(self, priority=None):
-        send_message('APP_IN_USE', {'priority': priority or 30})
+        self.send_message('APP_IN_USE', {'priority': priority or 30})
 
     # Sends a query to mycroft
     def query(self, capability, action, data, instance_id=[], priority=30):
         query_message = {
-            'id': uuid.uuid4(),
+            'id': str(uuid.uuid4()),
             'capability': capability,
             'action': action,
             'data': data,
@@ -82,7 +70,7 @@ class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
             'instanceId': instance_id
         }
 
-        send_message('MSG_QUERY', query_message)
+        self.send_message('MSG_QUERY', query_message)
 
     # Sends query success to mycroft
     def query_success(self, message_id, ret):
@@ -91,7 +79,7 @@ class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
             'ret': ret
         }
 
-        send_message('MSG_QUERY_SUCCESS', query_success_message)
+        self.send_message('MSG_QUERY_SUCCESS', query_success_message)
 
     # Sends query fail to mycroft
     def query_fail(self, message_id, message):
@@ -100,16 +88,16 @@ class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
             'message': message
         }
 
-        send_message('MSG_QUERY_FAIL', query_fail_message)
+        self.send_message('MSG_QUERY_FAIL', query_fail_message)
 
     # Send broadcast to mycroft
     def broadcast(self, content):
         message = {
-            'id': uuid.uuid4(),
+            'id': str(uuid.uuid4()),
             'content': content
         }
 
-        send_message('MSG_BROADCAST', message)
+        self.send_message('MSG_BROADCAST', message)
 
     # Parses a message
     def parse_message(self, msg):
@@ -130,13 +118,14 @@ class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
     # Sends a message of a specific type
     def send_message(self, msg_type, message=None):
         message = '' if message is None else json.dumps(message)
-        body = type + ' ' + message
+        body = msg_type + ' ' + message
         body = body.strip()
         length = len(body)
         print('Sending Message')
         print(str(length))
         print(body)
-        self.send("{0}\n{1}".format(length, body))
+        string = "{0}\n{1}".format(length, body)
+        self.socket.send(bytes(string, 'UTF-8'))
 
     # Updates dependencies
     def update_dependencies(self, deps):
@@ -148,8 +137,14 @@ class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
     def recv_until_newline(self):
         message = ""
         while True:
-            chunk = self.recv(1)
-            if chunk == "" or chunk == "\n":
+            chunk = str(self.socket.recv(1), encoding='UTF-8')
+            if chunk == "" or chunk == '\n':
                 break
             message += chunk
         return message
+
+    def start(self):
+        try:
+            self.event_loop()
+        finally:
+            self.handle_close()
