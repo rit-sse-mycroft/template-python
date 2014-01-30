@@ -58,8 +58,8 @@ class MycroftClient():
         self.send_message('APP_DOWN')
 
     # Sends app in use to mycroft
-    def in_use(self, priority=None):
-        self.send_message('APP_IN_USE', {'priority': priority or 30})
+    def in_use(self, priority=30):
+        self.send_message('APP_IN_USE', {'priority': priority})
 
     # Sends a query to mycroft
     def query(self, capability, action, data, instance_id=[], priority=30):
