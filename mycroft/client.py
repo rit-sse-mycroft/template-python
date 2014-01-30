@@ -1,4 +1,4 @@
-import socket, re, json, uuid, sys
+import socket, re, json, uuid, sys, ssl
 
 class MycroftClient():
 
