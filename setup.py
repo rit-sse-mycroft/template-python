@@ -9,5 +9,7 @@ setup(
     license='LICENSE.txt',
     description='Create mycroft applications in python',
     long_description=open('README.md').read(),
-    install_requires=[]
+    install_requires=[
+        "tlslite >= 0.4.6"
+    ]
 )

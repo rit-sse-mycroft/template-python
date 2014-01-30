@@ -1,12 +1,29 @@
-import asyncore, socket, re, json, uuid
+import asyncore, socket, re, json, uuid, sys
+from tlslite.api import *
 
-class MycroftClient(asynccore.dispatcher):
+class MycroftClient(TLSAsyncDispatcherMixIn, asynccore.dispatcher):
 
     def __init__(self, host, port):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((host, port))
         self.dependencies = {}
+        if len(sys.argv) == 1:
+            s = open(cert_path).read()
+            x509 = X509()
+            x509.parse(s)
+            cert_chain = X509CertChain([x509])
+
+            s = open(key_path).read()
+            private_key = parsePEMKey(s, private=True)
+            TLSAsyncDispatcherMixIn.__init__(self, self.socket)
+            self.tlsConnection.ignoreAbruptClose = True
+            handshaker = self.tlsConnection.handshakeClientCert(
+                certChain=certChain,
+                privateKey=privateKey,
+                async=True)
+            self.setHandshakeOp(handshaker)
+
 
     def handle_connect(self):
         print('Connected to Mycroft')
