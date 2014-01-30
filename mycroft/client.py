@@ -9,13 +9,25 @@ class MycroftClient(asynccore.dispatcher):
         self.dependencies = {}
 
     def handle_connect(self):
-        pass
+        print('Connected to Mycroft')
+        send_manifest()
+        on_connect()
 
     def handle_read(self):
-        pass
+        length = int(recv_until_newline())
+        message = recv(length)
+        parsed = parse_message(message)
+        print('Recieved {0}'.format(parsed))
+        if parsed['type'] == 'APP_MANIFEST_OK' or parsed['type'] == 'APP_MANIFEST_FAIL':
+            check_manifest(parsed)
+            self.verified = True
+        on_data(parsed)
 
     def handle_close(self):
-        pass
+        on_end()
+        down()
+        print('Disconnected from Mycroft')
+        self.close()
 
     # Sends App Manifest to mycroft
     def send_manifest(self):
@@ -115,3 +127,12 @@ class MycroftClient(asynccore.dispatcher):
             self.dependencies[capability] = self.dependencies[capability] or {}
             for appId, status in instance.iteritems():
                 self.dependencies[capability][appId] = status
+
+    def recv_until_newline(self):
+        message = ""
+        while True:
+            chunk = self.recv(1)
+            if chunk == "" or chunk == "\n":
+                break
+            message += chunk
+        return message
