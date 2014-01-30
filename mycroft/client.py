@@ -1,10 +1,12 @@
-import socket, asyncore, re, json, uuid, sys
-#from tlslite.api import *
+import socket, re, json, uuid, sys
 
 class MycroftClient():
 
     def __init__(self, host, port):
-        self.socket = socket.create_connection((host,port))
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if len(sys.argv) == 1:
+            self.socket = ssl.wrap_socket(self.socket, keyfile=key_path, certfile=cert_path)
+        self.socket.connect((host,port))
         self.handle_connect()
         self.dependencies = {}
 
