@@ -1,4 +1,4 @@
-import asyncore, socket, re, json
+import asyncore, socket, re, json, uuid
 
 class MycroftClient(asynccore.dispatcher):
 
@@ -34,9 +34,53 @@ class MycroftClient(asynccore.dispatcher):
     def up(self):
         send_message('APP_UP')
 
-    # Sends app dwon to mycroft
+    # Sends app down to mycroft
     def down(self):
         send_message('APP_DOWN')
+
+    # Sends app in use to mycroft
+    def in_use(self, priority=None):
+        send_message('APP_IN_USE', {'priority': priority or 30})
+
+    # Sends a query to mycroft
+    def query(self, capability, action, data, instance_id=[], priority=30):
+        query_message = {
+            'id': uuid.uuid4(),
+            'capability': capability,
+            'action': action,
+            'data': data,
+            'priority': priority,
+            'instanceId': instance_id
+        }
+
+        send_message('MSG_QUERY', query_message)
+
+    # Sends query success to mycroft
+    def query_success(self, message_id, ret):
+        query_success_message = {
+            'id': message_id,
+            'ret': ret
+        }
+
+        send_message('MSG_QUERY_SUCCESS', query_success_message)
+
+    # Sends query fail to mycroft
+    def query_fail(self, message_id, message):
+        query_fail_message = {
+            'id': message_id,
+            'message': message
+        }
+
+        send_message('MSG_QUERY_FAIL', query_fail_message)
+
+    # Send broadcast to mycroft
+    def broadcast(self, content):
+        message = {
+            'id': uuid.uuid4(),
+            'content': content
+        }
+
+        send_message('MSG_BROADCAST', message)
 
     # Parses a message
     def parse_message(self, msg):
