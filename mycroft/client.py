@@ -17,6 +17,27 @@ class MycroftClient(asynccore.dispatcher):
     def handle_close(self):
         pass
 
+    # Sends App Manifest to mycroft
+    def send_manifest(self):
+        f = open(self.manifest)
+        manifest = json.loads(f.read())
+        send_message('APP_MANIFEST', message)
+
+    # Checks if manifest is valid
+    def check_manifest(self, parsed):
+        if parsed['type'] == 'APP_MANIFEST_OK':
+            print('Manifest Validated')
+        elif(parsed['type'] == 'APP_MANIFEST_FAIL'):
+            raise Exception("Invalid Application Manifest")
+
+    # Sends app up to mycroft
+    def up(self):
+        send_message('APP_UP')
+
+    # Sends app dwon to mycroft
+    def down(self):
+        send_message('APP_DOWN')
+
     # Parses a message
     def parse_message(self, msg):
         regex = re.compile('([A-Z_]*) ({.*})$')
