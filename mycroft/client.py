@@ -9,6 +9,10 @@ class MycroftClient(HelpersMixin, MessagesMixin):
         self.socket.connect((host,port))
         self.handle_connect()
         self.dependencies = {}
+        self.handlers = EventHandlers()
+
+    def on(msg_type, func):
+        handlers[k] = func
 
     def event_loop(self):
         while True:
@@ -17,21 +21,20 @@ class MycroftClient(HelpersMixin, MessagesMixin):
     def handle_connect(self):
         print('Connected to Mycroft')
         self.send_manifest()
-        self.connected = True
-        self.on_connect()
+        self.handlers(self, 'connect')
 
     def handle_read(self):
         length = int(self.recv_until_newline())
         message = str(self.socket.recv(length),encoding='UTF-8')
         parsed = self.parse_message(message)
         print('Recieved {0}'.format(parsed))
+        self.handlers(self, parsed['type'], parsed['data'])
         if parsed['type'] == 'APP_MANIFEST_OK' or parsed['type'] == 'APP_MANIFEST_FAIL':
             self.check_manifest(parsed)
             self.verified = True
-        self.on_data(parsed)
 
     def handle_close(self):
-        self.on_end()
+        self.handlers(self, 'end')
         self.down()
         print('Disconnected from Mycroft')
         self.socket.close()
@@ -41,3 +44,13 @@ class MycroftClient(HelpersMixin, MessagesMixin):
             self.event_loop()
         finally:
             self.handle_close()
+
+    def app_manifest_ok(self, msg_type, data ):
+        self.verified = True
+        puts 'Manifest Verified'
+
+    def app_manifest_fail(self, msg_type, data):
+        raise Exception('Invalid application manifest')
+
+    self.on('APP_MANIFEST_OK', app_manifest_ok)
+    self.on('APP_MANIFEST_FAIL', app_manifest_fail)

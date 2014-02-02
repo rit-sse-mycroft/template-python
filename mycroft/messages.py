@@ -6,13 +6,6 @@ class MessagesMixin:
         message = json.loads(f.read())
         self.send_message('APP_MANIFEST', message)
 
-    # Checks if manifest is valid
-    def check_manifest(self, parsed):
-        if parsed['type'] == 'APP_MANIFEST_OK':
-            print('Manifest Validated')
-        elif(parsed['type'] == 'APP_MANIFEST_FAIL'):
-            raise Exception("Invalid Application Manifest")
-
     # Sends app up to mycroft
     def up(self):
         self.send_message('APP_UP')
