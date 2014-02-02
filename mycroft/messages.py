@@ -1,4 +1,4 @@
-import uuid
+import uuid, json
 class MessagesMixin:
     # Sends App Manifest to mycroft
     def send_manifest(self):
