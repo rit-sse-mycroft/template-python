@@ -1,4 +1,4 @@
-class Events:
+class EventHandlers:
     def __init__(self):
         self.handlers = {}
 
@@ -8,9 +8,9 @@ class Events:
         self.handlers[k].append(handler)
         return self
 
-    def __call__(self, sender, event, data):
-        if(event in self.handlers):
-            for handler in self.handlers[event]:
-                handler(sender, event, data)
+    def __call__(self, sender, msg_type, data=None):
+        if(msg_type in self.handlers):
+            for handler in self.handlers[msg_type]:
+                handler(sender, msg_type, data)
         else:
-            print("Not handling message: {0}".format(event))
+            print("Not handling message: {0}".format(msg_type))
