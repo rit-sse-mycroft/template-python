@@ -13,6 +13,7 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
         self.handlers = event.EventHandlers()
         self.on('APP_MANIFEST_OK', self.app_manifest_ok)
         self.on('APP_MANIFEST_FAIL', self.app_manifest_fail)
+        self.on('MSG_GENERAL_FAILURE', self.message_general_failure)
         self.handle_connect()
 
     def on(self, msg_type, func):
@@ -52,3 +53,6 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
 
     def app_manifest_fail(self, sender, msg_type, data):
         raise Exception('Invalid application manifest')
+
+    def message_general_failure(self, sender, msg_type, data):
+        print(data['message'])
