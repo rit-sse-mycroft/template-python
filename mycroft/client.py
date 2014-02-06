@@ -32,7 +32,7 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
         length = int(self.recv_until_newline())
         message = str(self.socket.recv(length),encoding='UTF-8')
         parsed = self.parse_message(message)
-        print('Recieved {0}'.format(parsed))
+        print('Got {0}'.format(parsed))
         self.handlers(self, parsed['type'], parsed['data'])
 
     def handle_close(self):
