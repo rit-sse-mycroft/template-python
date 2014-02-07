@@ -1,6 +1,7 @@
 class EventHandlers:
-    def __init__(self):
+    def __init__(self, logger):
         self.handlers = {}
+        self.logger = logger
 
     def __setitem__(self, k, handler):
         if k not in self.handlers:
@@ -13,4 +14,4 @@ class EventHandlers:
             for handler in self.handlers[msg_type]:
                 handler(sender, msg_type, data)
         else:
-            print("Not handling message: {0}".format(msg_type))
+            self.logger.warning("Not handling message: {0}".format(msg_type))

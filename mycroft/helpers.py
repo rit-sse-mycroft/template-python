@@ -22,9 +22,8 @@ class HelpersMixin:
         body = msg_type + ' ' + message
         body = body.strip()
         length = len(body)
-        print('Sending Message')
-        print(str(length))
-        print(body)
+        self.logger.info('Sending Message')
+        self.logger.debug(str(length) + ' ' + (body))
         string = "{0}\n{1}".format(length, body)
         self.socket.send(bytes(string, 'UTF-8'))
 
