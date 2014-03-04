@@ -3,26 +3,47 @@ import json
 
 
 class MessagesMixin:
-    # Sends App Manifest to mycroft
+
     def send_manifest(self):
+        """
+        Send the manifest to Mycroft
+        """
         f = open(self.manifest)
         message = json.loads(f.read())
         self.send_message('APP_MANIFEST', message)
 
-    # Sends app up to mycroft
     def up(self):
+        """
+        Send APP_UP to Mycroft
+        """
         self.send_message('APP_UP')
 
-    # Sends app down to mycroft
     def down(self):
+        """
+        Send APP_DOWN to Mycroft
+        """
         self.send_message('APP_DOWN')
 
-    # Sends app in use to mycroft
     def in_use(self, priority=30):
+        """
+        Send APP_IN_USE to Mycroft
+        Args:
+            priority - optional, int indicating priority
+                       (default 30)
+        """
         self.send_message('APP_IN_USE', {'priority': priority})
 
-    # Sends a query to mycroft
     def query(self, capability, action, data, instance_id=[], priority=30):
+        """
+        Send MSG_QUERY to Mycroft
+        Args:
+            capability - str, the target capability
+            action - str, the action on the target app
+            data - JSON serializable, usually dict, data to send in body
+            instance_id - optional, array of target instances to query
+                          (default all)
+            priority - optional, int default 30
+        """
         query_message = {
             'id': str(uuid.uuid4()),
             'capability': capability,
@@ -34,8 +55,13 @@ class MessagesMixin:
 
         self.send_message('MSG_QUERY', query_message)
 
-    # Sends query success to mycroft
     def query_success(self, message_id, ret):
+        """
+        Send MSG_QUERY_SUCCESS to Mycroft
+        Args:
+            message_id - the ID of the message to which you are repsonding
+            ret - returned data
+        """
         query_success_message = {
             'id': message_id,
             'ret': ret
@@ -43,8 +69,13 @@ class MessagesMixin:
 
         self.send_message('MSG_QUERY_SUCCESS', query_success_message)
 
-    # Sends query fail to mycroft
     def query_fail(self, message_id, message):
+        """
+        Send MSG_QUERY_FAIL to Mycroft
+        Args:
+            message_id - the ID of the message to which you are responding
+            message - str, why the query failed generally
+        """
         query_fail_message = {
             'id': message_id,
             'message': message
@@ -52,8 +83,12 @@ class MessagesMixin:
 
         self.send_message('MSG_QUERY_FAIL', query_fail_message)
 
-    # Send broadcast to mycroft
     def broadcast(self, content):
+        """
+        Send a MSG_BROADCAST to Mycroft
+        Args:
+            content - dict, what you are sending out
+        """
         message = {
             'id': str(uuid.uuid4()),
             'content': content
