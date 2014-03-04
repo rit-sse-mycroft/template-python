@@ -31,14 +31,19 @@ class HelpersMixin:
 
     # Sends a message of a specific type
     def send_message(self, msg_type, message=None):
-        message = '' if message is None else json.dumps(message)
+        if message is not None:
+            message = json.dumps(message)
+        else:
+            message = ''
         body = msg_type + ' ' + message
         body = body.strip()
-        length = len(body)
-        self.logger.info('Sending Message')
-        self.logger.debug(str(length) + ' ' + (body))
-        string = "{0}\n{1}".format(length, body)
-        self.socket.send(bytes(string, 'UTF-8'))
+        length = len(body.encode('utf-8'))
+        # don't log if we don't have a logger!
+        if hasattr(self, 'logger'):
+            self.logger.info('Sending Message')
+            self.logger.debug(str(length) + ' ' + (body))
+        to_send = "{0}\n{1}".format(length, body)
+        self.socket.send(to_send.encode('utf-8'))
 
     # Updates dependencies
     def update_dependencies(self, deps):

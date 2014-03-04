@@ -2,6 +2,18 @@ import unittest
 from mycroft import helpers
 
 
+class MockSocket():
+    """
+    Mocks a Python socket
+    """
+
+    def __init__(self):
+        self.bytes = b''
+
+    def send(self, bytes_):
+        self.bytes += bytes_
+
+
 class TestParseMessage(unittest.TestCase):
 
     def test_msg_with_body(self):
@@ -59,3 +71,42 @@ class TestParseMessage(unittest.TestCase):
         msg = ''
         with self.assertRaises(ValueError):
             helper.parse_message(msg)
+
+
+class TestSendMessage(unittest.TestCase):
+
+    def test_send_with_body(self):
+        helper = helpers.HelpersMixin()
+        mock_socket = MockSocket()
+        helper.socket = mock_socket
+        # send a message w/ the snowman character, bonus utf8 test!
+        helper.send_message(
+            'VERB',
+            {'this is': '☃'}
+        )
+
+        expected_body = 'VERB {"this is": "\\u2603"}'
+        num_bytes = len(expected_body.encode('utf-8'))
+        expected_body = str(num_bytes) + '\n' + expected_body
+        bytes_expected = expected_body.encode('utf-8')
+
+        self.assertEqual(
+            bytes_expected,
+            mock_socket.bytes
+        )
+
+    def test_send_without_body(self):
+        helper = helpers.HelpersMixin()
+        mock_socket = MockSocket()
+        helper.socket = mock_socket
+        helper.send_message('VERB')
+
+        expected = 'VERB'
+        num_bytes = len(expected.encode('utf-8'))
+        expected = str(num_bytes) + '\n' + expected
+        bytes_expected = expected.encode('utf-8')
+
+        self.assertEqual(
+            bytes_expected,
+            mock_socket.bytes
+        )
