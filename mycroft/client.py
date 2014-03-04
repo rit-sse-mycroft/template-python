@@ -1,18 +1,28 @@
-import socket, sys, ssl, logging, os
+import socket
+import sys
+import ssl
+import logging
+import os
 from logging import handlers
 from mycroft import helpers, event, messages, logger
+
 
 class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
     FORMAT = "[$BOLD%(asctime)-20s$RESET] [%(levelname)-18s]  %(message)s"
     COLOR_FORMAT = logger.formatter_message(FORMAT, True)
+
     def __init__(self, name, host, port, manifest, key_path='', cert_path=''):
         self.name = name
         self.setup_logger()
         self.manifest = manifest
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if len(sys.argv) == 1:
-            self.socket = ssl.wrap_socket(self.socket, keyfile=key_path, certfile=cert_path)
-        self.socket.connect((host,port))
+            self.socket = ssl.wrap_socket(
+                self.socket,
+                keyfile=key_path,
+                certfile=cert_path
+            )
+        self.socket.connect((host, port))
         self.dependencies = {}
         self.handlers = event.EventHandlers(self.logger)
         self.on('APP_MANIFEST_OK', self.app_manifest_ok)
@@ -24,12 +34,17 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
         color_formatter = logger.ColoredFormatter(self.COLOR_FORMAT)
-        regular_formatter = logging.Formatter("[%(asctime)-20s][%(levelname)-5s]  %(message)s")
+        regular_formatter = logging.Formatter(
+            '[%(asctime)-20s][%(levelname)-5s]  %(message)s'
+        )
         try:
             os.mkdir('logs')
         except OSError:
             pass
-        file_handler = handlers.TimedRotatingFileHandler("{0}/{1}.log".format('logs', self.name), 'midnight')
+        file_handler = handlers.TimedRotatingFileHandler(
+            "{0}/{1}.log".format('logs', self.name),
+            'midnight'
+        )
         file_handler.setFormatter(regular_formatter)
         self.logger.addHandler(file_handler)
 
@@ -51,7 +66,7 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
 
     def handle_read(self):
         length = int(self.recv_until_newline())
-        message = str(self.socket.recv(length),encoding='UTF-8')
+        message = str(self.socket.recv(length), encoding='UTF-8')
         parsed = self.parse_message(message)
         self.logger.info('Got {0}'.format(parsed['type']))
         self.logger.debug(parsed['data'])
@@ -69,7 +84,7 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
         finally:
             self.handle_close()
 
-    def app_manifest_ok(self, sender, msg_type, data ):
+    def app_manifest_ok(self, sender, msg_type, data):
         self.verified = True
         self.logger.info('Manifest Verified')
 

@@ -1,4 +1,7 @@
-import re, json
+import json
+import re
+
+
 class HelpersMixin:
     # Parses a message
     def parse_message(self, msg):
