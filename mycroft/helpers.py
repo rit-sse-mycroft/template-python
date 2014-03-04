@@ -1,23 +1,33 @@
 import json
-import re
+import string
 
 
 class HelpersMixin:
+
     # Parses a message
     def parse_message(self, msg):
-        regex = re.compile('([A-Z_]*) ({.*})$')
-        match = regex.match(msg)
-        if match is None:
-            regex = re.compile('([A-Z_]*)')
-            match = regex.match(msg)
-            if match is None:
-                raise Exception('Error: Malformed Message')
-            msg_type = match.groups()[0]
-            data = {}
+        msg = msg.strip()
+        if not msg:
+            raise ValueError('Message was empty')
+        # the verb ends after the first space
+        verb_idx = msg.find(' ')
+        if verb_idx < 0:
+            # there is no body, just return the verb
+            data = None
+            verb = msg
         else:
-            msg_type = match.groups()[0]
-            data = json.loads(match.groups()[1])
-        return {'type': msg_type, 'data': data}
+            # there is a body, cut it out & parse
+            verb = msg[:verb_idx]
+            msg = msg[verb_idx+1:]
+            msg.strip()
+            data = json.loads(msg)
+        # make sure verb was formatted correctly
+        acceptable = set(string.ascii_uppercase).union(set(string.digits))
+        acceptable.add('_')
+        for char in verb:
+            if char not in acceptable:
+                raise ValueError('Verb {0} is not valid'.format(verb))
+        return {'type': verb, 'data': data}
 
     # Sends a message of a specific type
     def send_message(self, msg_type, message=None):
