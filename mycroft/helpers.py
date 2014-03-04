@@ -4,8 +4,16 @@ import string
 
 class HelpersMixin:
 
-    # Parses a message
     def parse_message(self, msg):
+        """
+        Parse a supplied message.
+        Args:
+            msg - a string of the message body (without length)
+        Returns:
+            {'type':str, 'data':dict}
+            the data key may have a null value if this message
+            doesn't have a body
+        """
         msg = msg.strip()
         if not msg:
             raise ValueError('Message was empty')
@@ -29,8 +37,14 @@ class HelpersMixin:
                 raise ValueError('Verb {0} is not valid'.format(verb))
         return {'type': verb, 'data': data}
 
-    # Sends a message of a specific type
     def send_message(self, msg_type, message=None):
+        """
+        Send a message to Mycroft server
+        Args:
+            msg_type - str, the verb (ie 'MSG_QUERY')
+            message - optional, dict that will be turned into JSON as the body
+        None is returned
+        """
         if message is not None:
             message = json.dumps(message)
         else:
@@ -45,8 +59,14 @@ class HelpersMixin:
         to_send = "{0}\n{1}".format(length, body)
         self.socket.send(to_send.encode('utf-8'))
 
-    # Updates dependencies
     def update_dependencies(self, deps):
+        """
+        Update the dependencies of this app.
+        Args:
+            deps - a dictionary of dependencies:
+                   {'capability': {'inst_name':'status', ...}, ...}
+        None is returned
+        """
         for capability, instance in deps.items():
             if not capability in self.dependencies:
                 self.dependencies[capability] = {}
@@ -54,6 +74,11 @@ class HelpersMixin:
                 self.dependencies[capability][appId] = status
 
     def recv_until_newline(self):
+        """
+        Read from self.socket until a newline is received
+        Returns:
+            str, what was read
+        """
         message = ""
         while True:
             chunk = str(self.socket.recv(1), encoding='UTF-8')
