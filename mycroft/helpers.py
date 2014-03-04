@@ -47,9 +47,10 @@ class HelpersMixin:
 
     # Updates dependencies
     def update_dependencies(self, deps):
-        for capability, instance in deps.iteritems():
-            self.dependencies[capability] = self.dependencies[capability] or {}
-            for appId, status in instance.iteritems():
+        for capability, instance in deps.items():
+            if not capability in self.dependencies:
+                self.dependencies[capability] = {}
+            for appId, status in instance.items():
                 self.dependencies[capability][appId] = status
 
     def recv_until_newline(self):

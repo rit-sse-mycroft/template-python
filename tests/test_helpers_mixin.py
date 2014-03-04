@@ -110,3 +110,65 @@ class TestSendMessage(unittest.TestCase):
             bytes_expected,
             mock_socket.bytes
         )
+
+
+class TestUpdateDependencies(unittest.TestCase):
+
+    def test_empty_dependencies(self):
+        helper = helpers.HelpersMixin()
+        helper.dependencies = {}
+        helper.update_dependencies({})
+        self.assertEqual(
+            {},
+            helper.dependencies
+        )
+
+    def test_unset_dependencies(self):
+        helper = helpers.HelpersMixin()
+        helper.dependencies = {}
+        helper.update_dependencies({
+            'cap1': {
+                'inst1': 'up',
+                'inst2': 'down'
+            }
+        })
+        self.assertEqual(
+            {
+                'cap1': {
+                    'inst1': 'up',
+                    'inst2': 'down'
+                }
+            },
+            helper.dependencies
+        )
+
+    def test_update_dependencies(self):
+        helper = helpers.HelpersMixin()
+        helper.dependencies = {
+            'cap1': {
+                'inst1': 'up',
+                'inst2': 'down'
+            },
+            'cap2': {
+                'cap2inst': 'down'
+            }
+        }
+        helper.update_dependencies({
+            'cap1': {
+                'inst1': 'down',
+                'inst3': 'up'
+            }
+        })
+        self.assertEqual(
+            {
+                'cap1': {
+                    'inst1': 'down',
+                    'inst2': 'down',
+                    'inst3': 'up'
+                },
+                'cap2': {
+                    'cap2inst': 'down'
+                }
+            },
+            helper.dependencies
+        )
