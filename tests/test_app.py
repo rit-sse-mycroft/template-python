@@ -4,6 +4,8 @@ import socketserver
 import io
 import threading
 import sys
+import logging
+import time
 
 
 class MockApp(mycroft.App):
@@ -27,6 +29,12 @@ class MockApp(mycroft.App):
     def record_event(self, ev_name, data=None):
         self.fired_events[ev_name] = True
 
+    @mycroft.on('before_connect')
+    def set_null_logger(self, ev_name):
+        for handler in self.logger.handlers:
+            handler.close()
+        self.logger.handlers = []
+
 
 class MockServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
@@ -39,8 +47,18 @@ class MycroftAppTestCase(unittest.TestCase):
 
     def setUp(self):
         sys.argv.append('--no-tls')
-        self.server = MockServer(('localhost', 8070), self.client_handler)
+        self.closing = False
+
+        class MockServerHandler(socketserver.BaseRequestHandler):
+            def handle(inner_self):
+                self.app_connection = inner_self.request
+                # keep the connection open
+                while not self.closing:
+                    pass
+
+        self.server = MockServer(('localhost', 8070), MockServerHandler)
         self.server_thread = threading.Thread(target=self.server.serve_forever)
+        self.server_thread.daemon = True
         self.server_thread.start()
         self.app = MockApp()
         self.manifest = io.StringIO("""
@@ -52,8 +70,16 @@ class MycroftAppTestCase(unittest.TestCase):
         """)
 
     def tearDown(self):
-        if hasattr(self, 'app_connection'):
-            self.app_connection.close()
+        try:
+            self.app.close()
+        except IOError:
+            pass
+        try:
+            if hasattr(self, 'app_connection'):
+                self.app_connection.close()
+        except IOError:
+            pass
+        self.closing = True
         self.server.shutdown()
         self.server.server_close()
 
@@ -61,9 +87,13 @@ class MycroftAppTestCase(unittest.TestCase):
 class TestStartup(MycroftAppTestCase):
 
     def test_start(self):
-        self.app.start(
-            name='TestApp',
-            manifest=self.manifest,
-            port=8070,
-            host='localhost',
-        )
+        def start_app_thread():
+            self.app.start(
+                name='TestApp',
+                manifest=self.manifest,
+                port=8070,
+                host='localhost',
+            )
+        self.app_thread = threading.Thread(target=start_app_thread)
+        self.app_thread.start()
+        time.sleep(1)

@@ -3,6 +3,7 @@ import sys
 import ssl
 import logging
 import os
+import inspect
 from logging import handlers
 from mycroft import helpers, event, messages, logger
 
@@ -57,6 +58,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         """
         try:
             self.name = name
+            self.closing = False
             self.dependencies = {}
             self.setup_logger()
             self.setup_handlers()
@@ -80,6 +82,9 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
                 self.handlers('before_handle_close', fail_silently=True)
                 self.handle_close()
                 self.handlers('after_handle_close', fail_silently=True)
+        except IOError as e:
+            if not hasattr(self, 'closing') or not self.closing:
+                raise e
         finally:
             if hasattr(self, 'handlers'):
                 self.handlers('end', fail_silently=True)
@@ -146,7 +151,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             -methods that start with on_*** (event name is ***)
         """
         self.handlers = event.EventHandler(self.logger)
-        for attr_name, val in self.__dict__.items():
+        for attr_name, val in inspect.getmembers(self):
             # handle the first type of event registration
             if hasattr(val, '_mycroft_events'):
                 for ev_name in val._mycroft_events:
@@ -170,7 +175,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         """
         Loops forever listening for messages
         """
-        while True:
+        while not self.closing:
             self.handlers('before_read', fail_silently=True)
             self.handle_read()
             self.handlers('after_read', fail_silently=True)
@@ -193,6 +198,10 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         self.down()
         self.logger.info('Disconnected from Mycroft')
         self.socket.close()
+
+    def close(self):
+        self.closing = True
+        self.handle_close()
 
     def on_app_manifest_ok(self, verb,  body):
         self.verified = True
