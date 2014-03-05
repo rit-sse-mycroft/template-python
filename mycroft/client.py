@@ -24,7 +24,7 @@ class MycroftClient(helpers.HelpersMixin, messages.MessagesMixin):
             )
         self.socket.connect((host, port))
         self.dependencies = {}
-        self.handlers = event.EventHandlers(self.logger)
+        self.handlers = event.EventHandler(self.logger)
         self.on('APP_MANIFEST_OK', self.app_manifest_ok)
         self.on('APP_MANIFEST_FAIL', self.app_manifest_fail)
         self.on('MSG_GENERAL_FAILURE', self.message_general_failure)
