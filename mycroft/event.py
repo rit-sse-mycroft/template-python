@@ -39,11 +39,12 @@ class EventHandler:
             fail_silently - when True don't log message if event is unhandled
                             (default False)
         """
+        internal_name = ev_name
         if not self.case_sensitive and hasattr(k, 'lower'):
-            ev_name = ev_name.lower()
+            internal_name = internal_name.lower()
         fail_silently = kwargs.pop('fail_silently', False)
-        if msg_type in self.handlers:
-            for handler in self.handlers[msg_type]:
-                handler(*args, **kwargs)
+        if internal_name in self.handlers:
+            for handler in self.handlers[internal_name]:
+                handler(ev_name, *args, **kwargs)
         elif not fail_silently:
-            self.logger.warning("Not handling message: {0}".format(msg_type))
+            self.logger.warning("Not handling message: {0}".format(ev_name))

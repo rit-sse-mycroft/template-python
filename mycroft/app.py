@@ -57,20 +57,26 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             self.dependencies = {}
             self.setup_logger()
             self.setup_handlers(self.logger)
-            self.handlers('before_connect', self)
-            self.setup_socket()
-            self.handlers('after_connect', self)
-            self.handlers('before_send_manifest', self)
-            self.logger.info('Sending Manifest')
+            self.handlers('before_connect', fail_silently=True)
+            self.setup_socket(
+                '--no-tls' not in sys.argv,
+                host=host,
+                port=port,
+                key_path=key_path,
+                cert_path=cert_path
+            )
+            self.handlers('after_connect', fail_silently=True)
+            self.handlers('before_send_manifest', fail_silently=True)
+            self.logger.info('Sending Manifest', fail_silently=True)
             self.send_manifest()
-            self.handlers('after_send_manifest', self)
-            self.handlers('before_event_loop')
+            self.handlers('after_send_manifest', fail_silently=True)
+            self.handlers('before_event_loop', fail_silently=True)
             try:
                 self.event_loop()
             finally:
-                self.handlers('before_handle_close')
+                self.handlers('before_handle_close', fail_silently=True)
                 self.handle_close()
-                self.handlers('after_handle_close')
+                self.handlers('after_handle_close', fail_silently=True)
         finally:
             self.handlers('end')
 
@@ -138,8 +144,9 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         self.handlers = event.EventHandler(self.logger)
         for attr_name, val in self.__dict__.items():
             # handle the first type of event registration
-            if hasattr(val, '_mycroft_event'):
-                self.handlers[val._mycroft_event] = val
+            if hasattr(val, '_mycroft_events'):
+                for ev_name in val._mycroft_events:
+                    self.handlers[ev_name] = val
             # handle the second type of event registration
             elif (attr_name.startswith('on') and
                   attr_name != 'on' and
@@ -175,9 +182,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         self.logger.debug(parsed['data'])
         self.handlers(
             parsed['type'],
-            self,
-            verb=parsed['type'],
-            body=parsed['data']
+            body=parsed['data'],
         )
 
     def handle_close(self):
@@ -185,13 +190,13 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         self.logger.info('Disconnected from Mycroft')
         self.socket.close()
 
-    def on_app_manifest_ok(self, sender, verb,  body):
+    def on_app_manifest_ok(self, verb,  body):
         self.verified = True
         self.logger.info('Manifest Verified')
 
-    def on_app_manifest_fail(self, sender, verb, body):
+    def on_app_manifest_fail(self, verb, body):
         self.logger.error('Invalid application manifest')
         raise Exception('Invalid application manifest')
 
-    def on_message_general_failure(self, sender, verb, body):
+    def on_message_general_failure(self, verb, body):
         self.logger.error(data['message'])
