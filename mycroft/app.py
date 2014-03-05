@@ -171,9 +171,9 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         Loops forever listening for messages
         """
         while True:
-            self.handlers('before_read', self)
+            self.handlers('before_read', fail_silently=True)
             self.handle_read()
-            self.handlers('after_read', self)
+            self.handlers('after_read', fail_silently=True)
 
     def handle_read(self):
         """
