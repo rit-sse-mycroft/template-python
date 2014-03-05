@@ -40,7 +40,7 @@ class EventHandler:
                             (default False)
         """
         internal_name = ev_name
-        if not self.case_sensitive and hasattr(k, 'lower'):
+        if not self.case_sensitive and hasattr(internal_name, 'lower'):
             internal_name = internal_name.lower()
         fail_silently = kwargs.pop('fail_silently', False)
         if internal_name in self.handlers:

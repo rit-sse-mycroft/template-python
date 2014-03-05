@@ -37,6 +37,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
     def start(
             self,
             manifest,
+            name,
             host='localhost',
             port=1847,
             key_path='',
@@ -46,17 +47,19 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         This attempts to connect to Mycroft.
         If connection is successful it sends APP_MANIFEST.
         Args:
-            manifest - str, the path to this application's manifest
+            manifest - str or file-like, the path to this application's manifest
+                       or a file-like object that will read() the manifest
+            name - a name for your application
             host - str, the host to connect to (default 'localhost')
             port - int, the port to connect to (default 1847)
             key_path - str, path to the keyfile
             cert_path - str, path to the crt file
         """
         try:
-            self.manifest = manifest
+            self.name = name
             self.dependencies = {}
             self.setup_logger()
-            self.setup_handlers(self.logger)
+            self.setup_handlers()
             self.handlers('before_connect', fail_silently=True)
             self.setup_socket(
                 '--no-tls' not in sys.argv,
@@ -67,8 +70,8 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             )
             self.handlers('after_connect', fail_silently=True)
             self.handlers('before_send_manifest', fail_silently=True)
-            self.logger.info('Sending Manifest', fail_silently=True)
-            self.send_manifest()
+            self.logger.info('Sending Manifest')
+            self.send_manifest(manifest)
             self.handlers('after_send_manifest', fail_silently=True)
             self.handlers('before_event_loop', fail_silently=True)
             try:
@@ -78,7 +81,8 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
                 self.handle_close()
                 self.handlers('after_handle_close', fail_silently=True)
         finally:
-            self.handlers('end')
+            if hasattr(self, 'handlers'):
+                self.handlers('end', fail_silently=True)
 
     def setup_logger(self):
         """

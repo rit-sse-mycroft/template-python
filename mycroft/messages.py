@@ -4,12 +4,17 @@ import json
 
 class MessagesMixin:
 
-    def send_manifest(self):
+    def send_manifest(self, manifest):
         """
         Send the manifest to Mycroft
+        Args:
+            manifest - str or file-like object
         """
-        f = open(self.manifest)
-        message = json.loads(f.read())
+        if not hasattr(manifest, 'read'):
+            manifest = open(self.manifest)
+        message = manifest.read()
+        manifest.close()
+        message = json.loads(message)
         self.send_message('APP_MANIFEST', message)
 
     def up(self):
