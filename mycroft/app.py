@@ -42,7 +42,8 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             host='localhost',
             port=1847,
             key_path='',
-            cert_path=''):
+            cert_path='',
+            silent=False):
         """
         Start this App.
         This attempts to connect to Mycroft.
@@ -55,12 +56,13 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             port - int, the port to connect to (default 1847)
             key_path - str, path to the keyfile
             cert_path - str, path to the crt file
+            silent - don't log anything
         """
         try:
             self.name = name
             self.closing = False
             self.dependencies = {}
-            self.setup_logger()
+            self.setup_logger(silent)
             self.setup_handlers()
             self.handlers('before_connect', fail_silently=True)
             self.setup_socket(
@@ -89,12 +91,16 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             if hasattr(self, 'handlers'):
                 self.handlers('end', fail_silently=True)
 
-    def setup_logger(self):
+    def setup_logger(self, silent):
         """
         Setup the logger.
         Assigns the logger to `self.logger`
+        Args:
+            silent - when True, doesn't add any handlers
         """
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("mycroft")
+        if silent:
+            return
         self.logger.setLevel(logging.DEBUG)
         color_formatter = logger.ColoredFormatter(_COLOR_FORMAT)
         regular_formatter = logging.Formatter(
@@ -109,11 +115,11 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             'midnight'
         )
         file_handler.setFormatter(regular_formatter)
-        self.logger.addHandler(file_handler)
 
         console = logging.StreamHandler(sys.stdout)
         console.setFormatter(color_formatter)
         self.logger.addHandler(console)
+        self.logger.addHandler(file_handler)
 
     def setup_socket(
             self,
@@ -198,6 +204,8 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         self.down()
         self.logger.info('Disconnected from Mycroft')
         self.socket.close()
+        for handler in self.logger.handlers:
+            handler.close()
 
     def close(self):
         self.closing = True
