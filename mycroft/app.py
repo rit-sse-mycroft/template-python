@@ -60,6 +60,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         """
         try:
             self.name = name
+            self.manifest = manifest
             self.closing = False
             self.dependencies = {}
             self.setup_logger(silent)
