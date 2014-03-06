@@ -56,18 +56,13 @@ is the verb which Mycroft sends, for example `'MSG_QUERY'`.
 
 The Mycroft package offers the following internal event triggers:
 
-* `before_connect` - fired immediately all handlers are registered and before attempting to connect to Mycroft
-* `after_connect` - fired after a connection to Mycroft is attained
-* `before_send_manifest` - fired before the Manifest is sent
-* `after_send_manifest` - fired after the Manifest is sent
-* `before_event_loop` - fired before the event loop (listening for messages) is entered
-* `before_read` - fired before waiting for a message
-* `after_read` - fired after a message was processed
-* `before_handle_close` - fired before the app sends APP_DOWN and disconnects from mycroft
-* `after_handle_close` - fired after the app sends APP_DOWN and disconnects from mycroft
-* `end` - fired after the application has closed, forcibly or otherwise (NOTE: this will not get fired the application has not been able to parse handlers yet)
+* `connect` - fired after a connection is established
+* `error` - fired on error, an additional parameter is passed to the handler containing the error thrown
+* `end` - fired on application closing, after sending APP_DOWN and disconnecting
+* `event_loop` - fired before the event loop is entered
 
-An event handler for internal events should only accept one argument, the name of the event being fired. For example:
+An event handler for internal events accepts at least one argument (more if noted above),
+which is the name of the event being fired. For example:
 
 ```python
 @mycroft.on('before_connect')
