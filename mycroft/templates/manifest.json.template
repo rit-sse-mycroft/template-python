@@ -1,0 +1,10 @@
+{
+    "version": "0.0.1",
+    "name": "$NAME",
+    "displayName": "$DISPLAYNAME",
+    "instanceId" : "$INSTANCEID",
+    "capabilities": {},
+    "API": 0,
+    "description": "$DESCRIPTION",
+    "dependencies": {}
+}

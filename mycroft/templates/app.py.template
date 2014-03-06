@@ -1,0 +1,14 @@
+import mycroft
+
+class $CLASSNAME(mycroft.App):
+
+    def on_manifest_ok(self):
+        self.up()
+
+
+if __name__ == '__main__':
+    app = $CLASSNAME()
+    app.start(
+        'manifest.json',
+        '$NAME'
+    )

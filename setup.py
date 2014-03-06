@@ -11,5 +11,6 @@ setup(
     long_description=open('README.md').read(),
     install_requires=[
         "tlslite >= 0.4.6"
-    ]
+    ],
+    package_data={'': ['templates/*']}
 )
