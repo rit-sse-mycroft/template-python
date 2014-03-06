@@ -78,6 +78,9 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
                 if hasattr(self, 'handlers'):
                     self.handlers('error', e, fail_silently=True)
                 raise e
+        except Exception as e:
+            if hasattr(self, 'handlers'):
+                self.handlers('error', e, fail_silently=True)
         finally:
             if hasattr(self, 'handlers'):
                 self.handlers('end', fail_silently=True)
