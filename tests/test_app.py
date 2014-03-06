@@ -19,16 +19,10 @@ class MockApp(mycroft.App):
         self.fired_events = {}
 
     @mycroft.on(
-        'before_connect',
-        'after_connect',
-        'before_send_manifest',
-        'after_send_manifest',
-        'before_event_loop',
-        'before_read',
-        'after_read',
-        'before_handle_close',
-        'after_handle_close',
-        'end')
+        'connect',
+        'end',
+        'error',
+        'event_loop')
     def record_event(self, ev_name, body=None):
         self.fired_events[ev_name] = True
 
@@ -103,16 +97,10 @@ class TestStartup(MycroftAppTestCase):
         self.app_thread = threading.Thread(target=start_app_thread)
         self.app_thread.start()
         time.sleep(0.4)
-        self.assertTrue('before_connect' in self.app.fired_events)
-        self.assertTrue('after_connect' in self.app.fired_events)
-        self.assertTrue('before_send_manifest' in self.app.fired_events)
-        self.assertTrue('after_send_manifest' in self.app.fired_events)
-        self.assertTrue('before_event_loop' in self.app.fired_events)
-        self.assertTrue('before_read' in self.app.fired_events)
-        self.assertFalse('after_read' in self.app.fired_events)
-        self.assertFalse('before_handle_close' in self.app.fired_events)
-        self.assertFalse('after_handle_close' in self.app.fired_events)
+        self.assertTrue('connect' in self.app.fired_events)
         self.assertFalse('end' in self.app.fired_events)
+        self.assertFalse('error' in self.app.fired_events)
+        self.assertTrue('event_loop' in self.app.fired_events)
 
         content = self.app_connection.recv(100).decode('utf-8')
         self.assertEqual(

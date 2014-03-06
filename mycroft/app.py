@@ -17,17 +17,10 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
 
     Mycroft can fire the following event names:
       internal events:
-        'before_connect' - fired before connection is attempted
-        'after_connect' - fired after connection is acheived
-        'before_send_manifest' - fired before manifest is to be sent
-        'after_send_manifest' - fired after manifest is sent
-        'before_event_loop' - fired before the event loop is started
-        'before_read' - before waiting for the next message
-        'after_read' - fired after the most recent message was processed
-        'before_handle_close' - fired after the app must close but before
-                                cleanup is done
-        'after_handle_close' - fired after the close is handled
-        'end' - fired, if possible, when start() is returning
+        'connect' - fired after connection is established
+        'error' - fired on error
+        'event_loop' - before the event loop starts
+        'end' - fired, if possible, when start() is exiting
       external events:
         any verb from Mycroft, such as
         'APP_MANIFEST_OK'
@@ -65,7 +58,6 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             self.dependencies = {}
             self.setup_logger(silent)
             self.setup_handlers()
-            self.handlers('before_connect', fail_silently=True)
             self.setup_socket(
                 '--no-tls' not in sys.argv,
                 host=host,
@@ -73,20 +65,18 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
                 key_path=key_path,
                 cert_path=cert_path
             )
-            self.handlers('after_connect', fail_silently=True)
-            self.handlers('before_send_manifest', fail_silently=True)
+            self.handlers('connect', fail_silently=True)
             self.logger.info('Sending Manifest')
             self.send_manifest(manifest)
-            self.handlers('after_send_manifest', fail_silently=True)
-            self.handlers('before_event_loop', fail_silently=True)
+            self.handlers('event_loop', fail_silently=True)
             try:
                 self.event_loop()
             finally:
-                self.handlers('before_handle_close', fail_silently=True)
                 self.handle_close()
-                self.handlers('after_handle_close', fail_silently=True)
         except IOError as e:
             if not hasattr(self, 'closing') or not self.closing:
+                if hasattr(self, 'handlers'):
+                    self.handlers('error', e, fail_silently=True)
                 raise e
         finally:
             if hasattr(self, 'handlers'):
@@ -183,9 +173,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         Loops forever listening for messages
         """
         while not self.closing:
-            self.handlers('before_read', fail_silently=True)
             self.handle_read()
-            self.handlers('after_read', fail_silently=True)
 
     def handle_read(self):
         """
