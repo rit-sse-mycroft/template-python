@@ -16,8 +16,9 @@ class MessagesMixin:
         message = manifest.read()
         manifest.close()
         message = json.loads(message)
-        if self.generate_instance_ids:
-            message['instanceId'] = "{0}_{1}".format(socket.gethostname(), str(uuid.uuid4()))
+        if hasattr(self, 'generate_instace_ids'):
+            if self.generate_instance_ids:
+                message['instanceId'] = "{0}_{1}".format(socket.gethostname(), str(uuid.uuid4()))
         self.send_message('APP_MANIFEST', message)
 
     def up(self):
