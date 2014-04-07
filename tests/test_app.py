@@ -18,15 +18,23 @@ class MockApp(mycroft.App):
     def __init__(self):
         self.fired_events = {}
 
-    @mycroft.on(
-        'connect',
-        'end',
-        'error',
-        'event_loop')
-    def record_event(self, ev_name, body=None):
-        self.fired_events[ev_name] = True
+    @mycroft.on('connect')
+    def connect(self, body=None):
+        self.fired_events['connect'] = True
 
-    def on_foo(self, ev_name, body):
+    @mycroft.on('end')
+    def end(self, body=None):
+        self.fired_events['end'] = True
+
+    @mycroft.on('error')
+    def error(self, body=None):
+        self.fired_events['error'] = True
+
+    @mycroft.on('event_loop')
+    def ev_loop(self, body=None):
+        self.fired_events['event_loop'] = True
+
+    def on_foo(self, body):
         self.fired_events['FOO'] = body
 
 
@@ -96,7 +104,7 @@ class TestStartup(MycroftAppTestCase):
             )
         self.app_thread = threading.Thread(target=start_app_thread)
         self.app_thread.start()
-        time.sleep(0.4)
+        time.sleep(0.5)
         self.assertTrue('connect' in self.app.fired_events)
         self.assertFalse('end' in self.app.fired_events)
         self.assertFalse('error' in self.app.fired_events)

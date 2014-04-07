@@ -3,7 +3,7 @@ import mycroft
 class $CLASSNAME(mycroft.App):
 
     @mycroft.on('APP_MANIFEST_OK')
-    def on_manifest_ok(self):
+    def manifest_ok(self, body):
         self.up()
 
 

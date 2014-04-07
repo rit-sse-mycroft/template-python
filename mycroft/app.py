@@ -203,13 +203,13 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
         self.closing = True
         self.handle_close()
 
-    def on_app_manifest_ok(self, verb,  body):
+    def on_app_manifest_ok(self, body):
         self.verified = True
         self.logger.info('Manifest Verified')
 
-    def on_app_manifest_fail(self, verb, body):
+    def on_app_manifest_fail(self, body):
         self.logger.error('Invalid application manifest')
         raise Exception('Invalid application manifest')
 
-    def on_message_general_failure(self, verb, body):
-        self.logger.error(data['message'])
+    def on_message_general_failure(self, body):
+        self.logger.error(body['message'])

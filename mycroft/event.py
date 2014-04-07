@@ -45,6 +45,6 @@ class EventHandler:
         fail_silently = kwargs.pop('fail_silently', False)
         if internal_name in self.handlers:
             for handler in self.handlers[internal_name]:
-                handler(ev_name, *args, **kwargs)
+                handler(*args, **kwargs)
         elif not fail_silently:
             self.logger.warning("Not handling message: {0}".format(ev_name))
