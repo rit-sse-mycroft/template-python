@@ -36,7 +36,7 @@ class App(helpers.HelpersMixin, messages.MessagesMixin):
             port=1847,
             key_path='',
             cert_path='',
-            silent=False):
+            silent=True):
         """
         Start this App.
         This attempts to connect to Mycroft.
