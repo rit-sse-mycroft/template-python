@@ -90,7 +90,7 @@ The `app.start()` method will launch your app, connect to Mycroft, send the mani
 * `port` - optional, int, the port to which the application connects (default `1847`)
 * `key_path` - optional, str, the path to the application's keyfile
 * `cert_path` - optional, str, the path to the application's certificate
-* `silent` - optional, bool, when True the application will produce no logging messages (default False)
+* `silent` - optional, bool, when True the application will produce no logging messages (default True)
 
 
 ### Helper Methods
